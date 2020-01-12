@@ -1,0 +1,34 @@
+#!/usr/bin/env python3
+
+import pathlib
+import plistlib
+import sys
+
+
+def generate_bookmark_leaves(dic):
+    if 'Children' in dic:
+        for child in dic['Children']:
+            for leaf in generate_bookmark_leaves(child):
+                yield leaf
+    elif dic['WebBookmarkType'] == 'WebBookmarkTypeLeaf':
+        yield dic
+
+
+def main():
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+        if path in ('-h', '--help'):
+            print('usage: dump-safari-reading-list [plist]')
+            sys.exit(0)
+    else:
+        path = pathlib.Path.home() / 'Library/Safari/Bookmarks.plist'
+
+    with open(path, 'rb') as f:
+        plist = plistlib.load(f)
+        for leaf in generate_bookmark_leaves(plist):
+            if 'ReadingList' in leaf:
+                print(leaf['URLString'])
+
+
+if __name__ == '__main__':
+    main()
